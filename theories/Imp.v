@@ -45,6 +45,8 @@ Inductive aevalR : aexp -> nat -> Prop :=
 (*     (mult n2 n3 = n1) -> (ADiv a1 a2) ==> n3 *)
 where "a ==> n" := (aevalR a n).
 
+Reserved Notation "t --> t'" (at level 50).
+
 Inductive bexp : Type :=
 | BTrue : bexp
 | BFalse : bexp
@@ -52,6 +54,19 @@ Inductive bexp : Type :=
 | BLe : aexp -> aexp -> bexp
 | BNot : bexp -> bexp
 | BAnd : bexp -> bexp -> bexp.
+
+Inductive bevalR : bexp -> bool -> Prop :=
+| E_BTrue true :
+    BTrue --> true
+| E_BFalse false :
+    BFalse --> false
+| E_BEq (e1 e2: aexp) (n1 n2: nat) :
+  e1 ==> n1 -> e2 ==> n2 -> BEq e1 e2 --> eqn n1 n2
+| E_BLe (e1 e2: aexp) (n1 n2: nat) :
+  e1 ==> n1 -> e2 ==> n2 -> BLe e1 e2 --> leb n1 n2
+| E_BNot (e : bexp) (val : bool) :
+  e --> negb val
+where "e --> b" := (bevalR e b).
 
 Coercion AId : string >-> aexp.
 Coercion ANum : nat >-> aexp.
@@ -92,6 +107,8 @@ Fixpoint beval (st : state) (b : bexp) : bool :=
   | BNot b1 => negb (beval st b1)
   | BAnd b1 b2 => andb (beval st b1) (beval st b2)
   end.
+
+
 
 Example aexp1 :
   aeval ([<>] [<X ~~>> 5>]) (3 + (X * 2)) = 13.
